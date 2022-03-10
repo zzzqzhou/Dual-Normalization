@@ -6,7 +6,7 @@ by [Ziqi Zhou](https://zzzqzhou.github.io/), [Lei Qi](http://palm.seu.edu.cn/qil
 This repository is for our CVPR 2022 paper '[Generalizable Cross-modality Medical Image Segmentation via Style Augmentation and Dual Normalization](https://arxiv.org/abs/2112.11177)'. 
 
 
-![](pics/cvpr22_dn.png)
+![](./picture/cvpr22_dn.png)
 
 ## Data Preparation
 
