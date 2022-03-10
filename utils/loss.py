@@ -56,10 +56,6 @@ def dice_coef2(y, target, num_classes=2):
             continue
         total_dice += dice_coef1(y[:, i, ...], target[:, i, ...])
     total_dice /= (num_classes - 1)
-    # interset = torch.sum(y * target)
-    # z_sum = torch.sum(y)
-    # y_sum = torch.sum(target)
-    # dice = (2.0 * interset + smooth) / (z_sum + y_sum + smooth)
     return total_dice
 
 def dice(y, target, p=2):
