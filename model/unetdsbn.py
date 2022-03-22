@@ -15,9 +15,9 @@ class MyUpsample2(nn.Module):
         return x[:, :, :, None, :, None].expand(-1, -1, -1, 2, -1, 2).reshape(x.size(0), x.size(1), x.size(2)*2, x.size(3)*2)
 
 
-def normalization(planes, norm='gn', num_domains=None):
+def normalization(planes, norm='gn', num_domains=None, momentum=0.1):
     if norm == 'dsbn':
-        m = DomainSpecificBatchNorm2d(planes, num_domains=num_domains)
+        m = DomainSpecificBatchNorm2d(planes, num_domains=num_domains, momentum=momentum)
     elif norm == 'bn':
         m = nn.BatchNorm2d(planes)
     elif norm == 'gn':
@@ -30,18 +30,18 @@ def normalization(planes, norm='gn', num_domains=None):
 
 #### Note: All are functional units except the norms, which are sequential
 class ConvD(nn.Module):
-    def __init__(self, inplanes, planes, norm='bn', first=False, num_domains=None):
+    def __init__(self, inplanes, planes, norm='bn', first=False, num_domains=None, momentum=0.1):
         super(ConvD, self).__init__()
 
         self.first = first
         self.conv1 = nn.Conv2d(inplanes, planes, 3, 1, 1, bias=True)
-        self.bn1   = normalization(planes, norm, num_domains)
+        self.bn1   = normalization(planes, norm, num_domains, momentum=momentum)
 
         self.conv2 = nn.Conv2d(planes, planes, 3, 1, 1, bias=True)
-        self.bn2   = normalization(planes, norm, num_domains)
+        self.bn2   = normalization(planes, norm, num_domains, momentum=momentum)
 
         self.conv3 = nn.Conv2d(planes, planes, 3, 1, 1, bias=True)
-        self.bn3   = normalization(planes, norm, num_domains)
+        self.bn3   = normalization(planes, norm, num_domains, momentum=momentum)
 
     def forward(self, x, weights=None, layer_idx=None, domain_label=None):
 
@@ -84,20 +84,20 @@ class ConvD(nn.Module):
         return z
 
 class ConvU(nn.Module):
-    def __init__(self, planes, norm='bn', first=False, num_domains=None):
+    def __init__(self, planes, norm='bn', first=False, num_domains=None, momentum=0.1):
         super(ConvU, self).__init__()
 
         self.first = first
         if not self.first:
             self.conv1 = nn.Conv2d(2*planes, planes, 3, 1, 1, bias=True)
-            self.bn1   = normalization(planes, norm, num_domains)
+            self.bn1   = normalization(planes, norm, num_domains, momentum=momentum)
 
         self.pool = MyUpsample2()
         self.conv2 = nn.Conv2d(planes, planes//2, 1, 1, 0, bias=True)
-        self.bn2   = normalization(planes//2, norm, num_domains)
+        self.bn2   = normalization(planes//2, norm, num_domains, momentum=momentum)
 
         self.conv3 = nn.Conv2d(planes, planes, 3, 1, 1, bias=True)
-        self.bn3   = normalization(planes, norm, num_domains)
+        self.bn3   = normalization(planes, norm, num_domains, momentum=momentum)
 
         self.relu = nn.ReLU(inplace=True)
 
@@ -148,19 +148,19 @@ class ConvU(nn.Module):
 
 
 class Unet2D(nn.Module):
-    def __init__(self, c=1, n=16, norm='bn', num_classes=2, num_domains=4):
+    def __init__(self, c=1, n=16, norm='bn', num_classes=2, num_domains=4, momentum=0.1):
         super(Unet2D, self).__init__()
 
-        self.convd1 = ConvD(c,     n, norm, first=True, num_domains=num_domains)
-        self.convd2 = ConvD(n,   2*n, norm, num_domains=num_domains)
-        self.convd3 = ConvD(2*n, 4*n, norm, num_domains=num_domains)
-        self.convd4 = ConvD(4*n, 8*n, norm, num_domains=num_domains)
-        self.convd5 = ConvD(8*n,16*n, norm, num_domains=num_domains)
+        self.convd1 = ConvD(c,     n, norm, first=True, num_domains=num_domains, momentum=momentum)
+        self.convd2 = ConvD(n,   2*n, norm, num_domains=num_domains, momentum=momentum)
+        self.convd3 = ConvD(2*n, 4*n, norm, num_domains=num_domains, momentum=momentum)
+        self.convd4 = ConvD(4*n, 8*n, norm, num_domains=num_domains, momentum=momentum)
+        self.convd5 = ConvD(8*n,16*n, norm, num_domains=num_domains, momentum=momentum)
 
-        self.convu4 = ConvU(16*n, norm, first=True, num_domains=num_domains)
-        self.convu3 = ConvU(8*n, norm, num_domains=num_domains)
-        self.convu2 = ConvU(4*n, norm, num_domains=num_domains)
-        self.convu1 = ConvU(2*n, norm, num_domains=num_domains)
+        self.convu4 = ConvU(16*n, norm, first=True, num_domains=num_domains, momentum=momentum)
+        self.convu3 = ConvU(8*n, norm, num_domains=num_domains, momentum=momentum)
+        self.convu2 = ConvU(4*n, norm, num_domains=num_domains, momentum=momentum)
+        self.convu1 = ConvU(2*n, norm, num_domains=num_domains, momentum=momentum)
 
         self.seg1 = nn.Conv2d(2*n, num_classes, 1)
 
