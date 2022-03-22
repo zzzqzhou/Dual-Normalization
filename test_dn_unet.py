@@ -61,7 +61,6 @@ if __name__ == '__main__':
         os.mkdir(FLAGS.label_dir)
     
     for test_idx in range(num_domain):
-        # Set BN's momentum = 1 to compute BN statistics of target domain data in forward propagation
         model = Unet2D(num_classes=n_classes, num_domains=2, norm='dsbn', momentum=1)
         model.load_state_dict(torch.load(os.path.join(model_dir, 'final_model.pth')))
         model = DataParallel(model).cuda()
