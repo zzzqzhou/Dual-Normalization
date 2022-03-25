@@ -10,6 +10,7 @@ from utils.palette import color_map
 from datasets.dataset import Dataset, ToTensor, CreateOnehotLabel
 
 import torch
+import torch.nn as nn
 import torchvision.transforms as tfs
 from torch.nn import DataParallel
 from torch.nn import PairwiseDistance
@@ -46,7 +47,6 @@ def cal_distance(means_1, means_2, vars_1, vars_2):
     return dis.item()
 
 
-
 if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu_ids
     model_dir = FLAGS.model_dir
@@ -61,17 +61,32 @@ if __name__ == '__main__':
         os.mkdir(FLAGS.label_dir)
     
     for test_idx in range(num_domain):
-        model = Unet2D(num_classes=n_classes, num_domains=2, norm='dsbn', momentum=1)
-        model.load_state_dict(torch.load(os.path.join(model_dir, 'final_model.pth')))
+        # Load trained model parameters
+        # Add an auxiliary BN layer to compute target BN statistics
+        model = Unet2D(num_classes=n_classes, num_domains=3, norm='dsbn')
+        trained_state_dict = torch.load(os.path.join(model_dir, 'final_model.pth'))
+        model_state_dict = model.state_dict()
+        state_dict = {k:v for k, v in trained_state_dict.items() if k in model_state_dict.keys()}
+        model_state_dict.update(state_dict)
+        model.load_state_dict(model_state_dict)
+
         model = DataParallel(model).cuda()
         means_list = []
         vars_list = []
+
+        # Get running means and running vars of DN
         for i in range(2):
             means, vars = get_bn_statis(model, i)
             means_list.append(means)
             vars_list.append(vars)
 
-        model.train()
+        model.eval()
+        
+        # Set 'train' mode for computing target BN statistics and better results
+        for m in model.modules():
+            if isinstance(m, nn.BatchNorm2d):
+                m.train()
+
         dataset = Dataset(base_dir=FLAGS.data_dir, split='test', domain_list=test_domain_list[test_idx],
                         transforms=tfs.Compose([
                             CreateOnehotLabel(num_classes=FLAGS.n_classes),
@@ -92,12 +107,16 @@ if __name__ == '__main__':
                 mask = batch['label'].detach().numpy()
                 dis = 99999999
                 best_out = None
+
+                # Get target BN statistics
+                _ = model(sample_data, domain_label=2*torch.ones(sample_data.shape[0], dtype=torch.long))
+                means, vars = get_bn_statis(model, 2)
+                
+                # Select best result
                 for domain_id in range(2):
-                    output = model(sample_data, domain_label=domain_id*torch.ones(sample_data.shape[0], dtype=torch.long))
-                    means, vars = get_bn_statis(model, domain_id)
                     new_dis = cal_distance(means, means_list[domain_id], vars, vars_list[domain_id])
                     if new_dis < dis:
-                        best_out = output
+                        best_out = model(sample_data, domain_label=domain_id*torch.ones(sample_data.shape[0], dtype=torch.long))
                         dis = new_dis
 
                 output = best_out
