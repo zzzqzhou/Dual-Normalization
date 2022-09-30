@@ -116,7 +116,7 @@ def main(data_root, modality, target_root):
             save_img(nonlinear_slices_1[:, :, i], masks[:, :, i], os.path.join(target_root, modality + '_sd', 'sample{}_0.npz'.format(count)))
             save_img(nonlinear_slices_3[:, :, i], masks[:, :, i], os.path.join(target_root, modality + '_sd', 'sample{}_1.npz'.format(count)))
             save_img(nonlinear_slices_5[:, :, i], masks[:, :, i], os.path.join(target_root, modality + '_sd', 'sample{}_2.npz'.format(count)))
-
+        count = count + 1
 if __name__ == '__main__':
     data_root = 'Your Data Dir.'
     target_root = 'Your Target Data Dir.'
