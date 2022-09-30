@@ -12,18 +12,18 @@ modality_name_list = {'t1': '_t1.nii.gz',
 
 def resize_image_itk(itkimage, newSize, resamplemethod=sitk.sitkNearestNeighbor):
     resampler = sitk.ResampleImageFilter()
-    originSize = itkimage.GetSize()  # 原来的体素块尺寸
+    originSize = itkimage.GetSize()
     originSpacing = itkimage.GetSpacing()
     newSize = np.array(newSize, float)
     factor = originSize / newSize
     newSpacing = originSpacing * factor
-    newSize = newSize.astype(np.int) # spacing肯定不能是整数
-    resampler.SetReferenceImage(itkimage)  # 需要重新采样的目标图像
+    newSize = newSize.astype(np.int)
+    resampler.SetReferenceImage(itkimage)
     resampler.SetSize(newSize.tolist())
     resampler.SetOutputSpacing(newSpacing.tolist())
     resampler.SetTransform(sitk.Transform(3, sitk.sitkIdentity))
     resampler.SetInterpolator(resamplemethod)
-    itkimgResampled = resampler.Execute(itkimage)  # 得到重新采样后的图像
+    itkimgResampled = resampler.Execute(itkimage)
     return itkimgResampled
 
 def save_img(slice, label, dir):
