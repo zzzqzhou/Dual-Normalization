@@ -5,10 +5,10 @@ import SimpleITK as sitk
 from bezier_curve import bezier_curve
 from tqdm import tqdm
 
-modality_name_list = {'t1': '_t1.nii.gz', 
-                      't1ce': '_t1ce.nii.gz', 
-                      't2': '_t2.nii.gz', 
-                      'flair': '_flair.nii.gz'}
+modality_name_list = {'t1': '_t1.nii', 
+                      't1ce': '_t1ce.nii', 
+                      't2': '_t2.nii', 
+                      'flair': '_flair.nii'}
 
 def resize_image_itk(itkimage, newSize, resamplemethod=sitk.sitkNearestNeighbor):
     resampler = sitk.ResampleImageFilter()
@@ -41,43 +41,10 @@ def nonlinear_transformation(slices):
     xvals_1, yvals_1 = bezier_curve(points_1, nTimes=100000)
     xvals_1 = np.sort(xvals_1)
 
-    points_2 = [[-1, -1], [-0.5, 0.5], [0.5, -0.5], [1, 1]]
-    xvals_2, yvals_2 = bezier_curve(points_2, nTimes=100000)
-    xvals_2 = np.sort(xvals_2)
-    yvals_2 = np.sort(yvals_2)
-
-    points_3 = [[-1, -1], [-0.5, 0.5], [0.5, -0.5], [1, 1]]
-    xvals_3, yvals_3 = bezier_curve(points_3, nTimes=100000)
-    xvals_3 = np.sort(xvals_3)
-
-    points_4 = [[-1, -1], [-0.75, 0.75], [0.75, -0.75], [1, 1]]
-    xvals_4, yvals_4 = bezier_curve(points_4, nTimes=100000)
-    xvals_4 = np.sort(xvals_4)
-    yvals_4 = np.sort(yvals_4)
-
-    points_5 = [[-1, -1], [-0.75, 0.75], [0.75, -0.75], [1, 1]]
-    xvals_5, yvals_5 = bezier_curve(points_5, nTimes=100000)
-    xvals_5 = np.sort(xvals_5)
-
-    """
-    slices, nonlinear_slices_2, nonlinear_slices_4 are source-similar images
-    nonlinear_slices_1, nonlinear_slices_3, nonlinear_slices_5 are source-dissimilar images
-    """
     nonlinear_slices_1 = np.interp(slices, xvals_1, yvals_1)
     nonlinear_slices_1[nonlinear_slices_1 == 1] = -1
-    
-    nonlinear_slices_2 = np.interp(slices, xvals_2, yvals_2)
 
-    nonlinear_slices_3 = np.interp(slices, xvals_3, yvals_3)
-    nonlinear_slices_3[nonlinear_slices_3 == 1] = -1
-
-    nonlinear_slices_4 = np.interp(slices, xvals_4, yvals_4)
-
-    nonlinear_slices_5 = np.interp(slices, xvals_5, yvals_5)
-    nonlinear_slices_5[nonlinear_slices_5 == 1] = -1
-
-    return slices, nonlinear_slices_1, nonlinear_slices_2, \
-           nonlinear_slices_3, nonlinear_slices_4, nonlinear_slices_5
+    return slices, nonlinear_slices_1
 
 
 def main(data_root, modality, target_root):
@@ -86,7 +53,7 @@ def main(data_root, modality, target_root):
     count = 0
     for name in tbar:
         nib_img = nib.load(os.path.join(data_root, name, name + modality_name_list[modality]))
-        nib_mask = nib.load(os.path.join(data_root, name, name + '_seg.nii.gz'))
+        nib_mask = nib.load(os.path.join(data_root, name, name + '_seg.nii'))
         
         affine = nib_img.affine.copy()
         
@@ -95,8 +62,8 @@ def main(data_root, modality, target_root):
         masks[masks != 0] = 1
 
         slices = norm(slices)
-        slices, nonlinear_slices_1, nonlinear_slices_2, \
-        nonlinear_slices_3, nonlinear_slices_4, nonlinear_slices_5 = nonlinear_transformation(slices)
+
+        slices, nonlinear_slices_1 = nonlinear_transformation(slices)
 
         if not os.path.exists(os.path.join(target_root, modality + '_ss')):
             os.makedirs(os.path.join(target_root, modality + '_ss'))
@@ -108,18 +75,15 @@ def main(data_root, modality, target_root):
             Source-Similar
             """
             save_img(slices[:, :, i], masks[:, :, i], os.path.join(target_root, modality + '_ss', 'sample{}_0.npz'.format(count)))
-            save_img(nonlinear_slices_2[:, :, i], masks[:, :, i], os.path.join(target_root, modality + '_ss', 'sample{}_1.npz'.format(count)))
-            save_img(nonlinear_slices_4[:, :, i], masks[:, :, i], os.path.join(target_root, modality + '_ss', 'sample{}_2.npz'.format(count)))
             """
             Source-Dissimilar
             """
             save_img(nonlinear_slices_1[:, :, i], masks[:, :, i], os.path.join(target_root, modality + '_sd', 'sample{}_0.npz'.format(count)))
-            save_img(nonlinear_slices_3[:, :, i], masks[:, :, i], os.path.join(target_root, modality + '_sd', 'sample{}_1.npz'.format(count)))
-            save_img(nonlinear_slices_5[:, :, i], masks[:, :, i], os.path.join(target_root, modality + '_sd', 'sample{}_2.npz'.format(count)))
             count += 1
 
+
 if __name__ == '__main__':
-    data_root = 'Your Data Dir.'
-    target_root = 'Your Target Data Dir.'
-    modality = 'Your Brats Modality'
+    data_root = 'Your Nii data Training Folder'
+    target_root = 'Your Npz data Training Folder'
+    modality = 't2'
     main(data_root, modality, target_root)
