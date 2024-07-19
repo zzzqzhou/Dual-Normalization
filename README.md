@@ -36,7 +36,7 @@ T2 as source domain
             └── t2_sd
 ```
 
-For Brats dataset, we combined the HGG and LGG (totally 285 cases) then random select 80% cases as training set (228 cases) and rest 20% cases as testing set (57 cases). Due to the access limit to my former university's GPU server, I can't provide the original dataset spliting. I provide a new random dataset spliting (in "Brats_trian.list" and "Brats_test.list") following our original setting.
+For Brats dataset, we combined the HGG and LGG (totally 285 cases) then random selected 80% cases as training set (228 cases) and rest 20% cases as testing set (57 cases). Due to the access limit to my former university's GPU server, I can't provide the original dataset spliting. I provide a new random dataset spliting (in "Brats_trian.list" and "Brats_test.list") following our original setting.
 
 ## Training and Testing
 
