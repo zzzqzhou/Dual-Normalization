@@ -18,17 +18,25 @@ This repository is for our CVPR 2022 paper '[Generalizable Cross-modality Medica
 T2 as source domain
 ``` 
 ├── [Your BraTS2018 Path]
+    ├── nii_data
+        ├── test
+            ├── Brats18_2013_4_1
+                ├── Brats18_2013_4_1_flair.nii
+                ├── Brats18_2013_4_1_t1.nii
+                ├── Brats18_2013_4_1_t1ce.ni
+                ├── Brats18_2013_4_1_t2.nii
+                └── Brats18_2013_4_1_seg.nii
+            ...
+        └──train
+            ...
     ├── npz_data
         ├── train
             ├── t2_ss
                 ├── sample1.npz, sample2.npz, xxx
             └── t2_sd
-        ├── test
-            ├── t1
-                ├── test_sample1.npz, test_sample2.npz, xxx
-            ├── t1ce
-            └── flair
 ```
+
+For Brats dataset, we combined the HGG and LGG (totally 285 cases) then random select 80% cases as training set (228 cases) and rest 20% cases as testing set (57 cases). Due to the access limit to my former university's GPU server, I can't provide the original dataset spliting. I provide a new random dataset spliting (in "Brats_trian.list" and "Brats_test.list") following our original setting.
 
 ## Training and Testing
 
@@ -36,17 +44,19 @@ Train on source domain T2.
 ```
 python -W ignore train_dn_unet.py \
   --train_domain_list_1 t2_ss --train_domain_list_2 t2_sd --n_classes 2 \
-  --batch_size 16 --n_epochs 50 --save_step 10 --lr 0.001 --gpu_ids 0 \
-  --result_dir ./results/unet_dn_t2 --data_dir [Your BraTS2018 Path]/npz_data
+  --batch_size 64 --n_epochs 50 --save_step 10 --lr 0.001 --gpu_ids 0 \
+  --result_dir ./results/unet_dn_t2 --data_dir [Your BraTS2018 Npz Training Data Folder]
 ```
 
-Test on target domains (T1, T1ce and Flair).
+Test on target volume images (T1, T1ce and Flair).
 
 ```
-python -W ignore test_dn_unet.py \
-  --test_domain_list t1 t1ce flair --model_dir ./results/unet_dn_t2/model
-  --batch_size 32 --save_label --label_dir ./vis/unet_dn_t2 --gpu_ids 0 \
-  --num_classes 2 --data_dir [Your BraTS2018 Path]/npz_data
+python -W ignore test_volume_.py \
+  --data_dir [Your BraTS2018 Nii Test Data Folfer]
+  --test_domain_list t1 t1ce flair \
+  --model_dir ./results/unet_dn_t2/model \
+  --batch_size 64 \
+  --gpu_ids 0 \
 ```
 
 ## Acknowledgement
