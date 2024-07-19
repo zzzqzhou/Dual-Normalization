@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', type=str, default='./BraTS_2018/test')
 parser.add_argument('--n_classes', type=int, default=2)
 parser.add_argument('--test_domain_list', nargs='+', type=str)
-parser.add_argument('--model_dir', type=str,  default='./results/unet_dn/model', help='model_dir')
+parser.add_argument('--model_dir', type=str,  default='./results/unet_dn_t2/model', help='model_dir')
 parser.add_argument('--batch_size', type=int,  default=32)
 parser.add_argument('--gpu_ids', type=str,  default='0', help='GPU to use')
 FLAGS = parser.parse_args()
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     
     for test_idx in range(num_domain):
         model = Unet2D(num_classes=n_classes, num_domains=2, norm='dsbn')
-        model.load_state_dict(torch.load(os.path.join(model_dir, 'epoch_19.pth')))
+        model.load_state_dict(torch.load(os.path.join(model_dir, 'final_model.pth')))
         model = DataParallel(model).cuda()
         means_list = []
         vars_list = []
