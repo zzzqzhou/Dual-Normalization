@@ -51,7 +51,7 @@ python -W ignore train_dn_unet.py \
 Test on target volume images (T1, T1ce and Flair).
 
 ```
-python -W ignore test_volume_.py \
+python -W ignore test_volume.py \
   --data_dir [Your BraTS2018 Nii Test Data Folfer]
   --test_domain_list t1 t1ce flair \
   --model_dir ./results/unet_dn_t2/model \
