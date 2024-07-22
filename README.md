@@ -27,13 +27,19 @@ T2 as source domain
                 ├── Brats18_2013_4_1_t2.nii
                 └── Brats18_2013_4_1_seg.nii
             ...
-        └──train
+        └── train
             ...
     ├── npz_data
         ├── train
             ├── t2_ss
-                ├── sample1.npz, sample2.npz, xxx
+                ├── sample0.npz, sample1.npz, xxx
             └── t2_sd
+        └── test
+            ├── t1
+                ├── test_sample0.npz, test_sample1.npz, xxx
+            ├── flair
+            ├── t2
+            └── t1ce
 ```
 
 For Brats dataset, we combined the HGG and LGG (totally 285 cases) then random selected 80% cases as training set (228 cases) and rest 20% cases as testing set (57 cases). Due to the access limit to my former university's GPU server, I can't provide the original dataset spliting. I provide a new random dataset spliting (in "Brats_trian.list" and "Brats_test.list") following our original setting.
@@ -48,12 +54,13 @@ python -W ignore train_dn_unet.py \
   --result_dir ./results/unet_dn_t2 --data_dir [Your BraTS2018 Npz Training Data Folder]
 ```
 
-Test on target volume images (T1, T1ce and Flair).
+Test on target domains (T1, T1ce and Flair).
 
 ```
-python -W ignore test_volume.py \
-  --data_dir [Your BraTS2018 Nii Test Data Folfer]
-  --test_domain_list t1 t1ce flair \
+python -W ignore test_dn_unet.py \
+  --data_dir [Your BraTS2018 Npz Test Data Folfer]
+  --n_classes 2 \
+  --test_domain_list flair t1 t1ce \
   --model_dir ./results/unet_dn_t2/model \
   --batch_size 64 \
   --gpu_ids 0 \
