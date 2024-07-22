@@ -120,13 +120,7 @@ if __name__ == '__main__':
                     total_dice += mmb.dc(pred_y, mask)
                     total_hd += mmb.hd95(pred_y, mask)
                     total_asd += mmb.asd(pred_y, mask)
-                
-                # if pred_y.sum() == 0:
-                #     total_hd += 100
-                #     total_asd += 100
-                # else:
-                #     total_hd += mmb.hd95(pred_y, mask)
-                #     total_asd += mmb.asd(pred_y, mask)
+
                 logging.info('Domain: {}, Dice: {}, HD: {}, ASD: {}'.format(
                     test_domain_list[test_idx],
                     round(100 * total_dice / (idx + 1), 2),
