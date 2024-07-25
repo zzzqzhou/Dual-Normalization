@@ -50,7 +50,7 @@ Train on source domain T2.
 ```
 python -W ignore train_dn_unet.py \
   --train_domain_list_1 t2_ss --train_domain_list_2 t2_sd --n_classes 2 \
-  --batch_size 64 --n_epochs 50 --save_step 10 --lr 0.004 --gpu_ids 0 \
+  --batch_size 128 --n_epochs 50 --save_step 10 --lr 0.004 --gpu_ids 0,1 \
   --result_dir ./results/unet_dn_t2 --data_dir [Your BraTS2018 Npz Training Data Folder]
 ```
 
